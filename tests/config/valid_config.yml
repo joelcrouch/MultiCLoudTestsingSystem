@@ -1,0 +1,19 @@
+cluster_name: "test_cluster"
+heartbeat_interval: 5.0
+failure_detection_threshold: 3
+replication_factor: 3
+cloud_providers:
+  aws:
+    name: "aws"
+    region: "us-east-1"
+    instance_type: "t2.micro"
+    max_nodes: 10
+    api_rate_limit: 100
+    network_timeout_base: 5.0
+  gcp:
+    name: "gcp"
+    region: "us-central1"
+    instance_type: "f1-micro"
+    max_nodes: 5
+    api_rate_limit: 50
+    network_timeout_base: 7.0

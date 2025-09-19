@@ -1,0 +1,2 @@
+cluster_name: "test_cluster"
+  heartbeat_interval: 5.0

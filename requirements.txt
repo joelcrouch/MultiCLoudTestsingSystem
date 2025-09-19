@@ -1,0 +1,9 @@
+boto3
+google-auth
+google-api-python-client
+azure-identity
+ibm-cloud-sdk-core
+aiohttp
+numpy
+pyyaml
+green

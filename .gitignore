@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+env/
+venv/
+ENV/
+
+.vscode/
+.idea/
+
+*.swp
+*.swo
+*.swn
+
+*.log
+
+# Conda
+.conda
+docs/WIP/
