@@ -50,7 +50,11 @@ class CrossCloudCommunicationProtocol:
         try:
             timeout_duration = self.registry.calculate_adaptive_timeout(target_node)
             print(f"DEBUG: Attempting to send message to {url} with timeout {timeout_duration}s")
-            print(f"DEBUG: Message payload: {message.payload}") # This will now work as message is a Message object
+            # Truncate chunk_data for cleaner debug output
+            debug_payload = message.payload.copy() if isinstance(message.payload, dict) else {}
+            if "chunk_data" in debug_payload and isinstance(debug_payload["chunk_data"], str):
+                debug_payload["chunk_data"] = debug_payload["chunk_data"][:50] + "..." + debug_payload["chunk_data"][-50:]
+            print(f"DEBUG: Message payload (truncated chunk_data): {debug_payload}")
 
             # Convert message to a dictionary suitable for JSON serialization
             message_dict = message.__dict__.copy()
