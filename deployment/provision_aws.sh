@@ -77,4 +77,5 @@ aws ec2 run-instances \
     --associate-public-ip-address
 
 echo "AWS provisioning script finished. Instances are launching."
-echo "You can monitor their status in the AWS EC2 console or by running: aws ec2 describe-instances --region $REGION --filters 'Name=tag:Project,Values=MultiCloudDistSys' --query 'Reservations[*].Instances[*].{InstanceId:InstanceId,State:State.Name,PublicIp:PublicIpAddress}' --output table
+echo "You can monitor their status in the AWS EC2 console or by running: aws ec2 describe-instances --region $REGION --filters 'Name=tag:Project,Values=MultiCloudDistSys' --query 'Reservations[*].Instances[*].{InstanceId:InstanceId,State:State.Name,PublicIp:PublicIpAddress}' --output table"
+
