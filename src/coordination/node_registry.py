@@ -119,6 +119,16 @@ class MultiCloudNodeRegistry:
         # Keep the last 100 samples
         self.latency_history[cloud_provider] = self.latency_history[cloud_provider][-100:]
 
+    async def get_available_nodes(self) -> List[NodeInfo]:
+        """
+        Returns a list of currently healthy and available nodes.
+        """
+        healthy_nodes = [
+            node for node_id, node in self.nodes.items()
+            if node.status == NodeStatus.HEALTHY
+        ]
+        return healthy_nodes
+
     async def handle_health_check_failure(self, node: NodeInfo, error: Exception):
         """Handles a failure in the health check."""
         if isinstance(error, asyncio.TimeoutError):

@@ -20,6 +20,11 @@ class SystemConfig:
     heartbeat_interval: float
     failure_detection_threshold: int
     replication_factor: int
+    # New attributes for Sprint 2 - Data Ingestion
+    data_sources: List[str]
+    chunk_size_mb: int
+    ingestion_retry_attempts: int
+    node_id: str # NEW ATTRIBUTE
 
 class ConfigurationManager:
     def __init__(self, config_path: str = 'config/multi_cloud.yml'):
@@ -43,7 +48,12 @@ class ConfigurationManager:
     def validate_configuration(self, config_data: Dict) -> SystemConfig:
         """Validate the structure and types of the configuration data."""
         # Basic validation, can be expanded with a schema library like Pydantic
-        required_keys = ['cluster_name', 'cloud_providers', 'heartbeat_interval', 'failure_detection_threshold', 'replication_factor']
+        required_keys = [
+            'cluster_name', 'cloud_providers', 'heartbeat_interval',
+            'failure_detection_threshold', 'replication_factor',
+            'data_sources', 'chunk_size_mb', 'ingestion_retry_attempts',
+            'node_id' # Added new key
+        ]
         for key in required_keys:
             if key not in config_data:
                 raise ValueError(f"Missing required configuration key: {key}")
@@ -57,7 +67,12 @@ class ConfigurationManager:
             cloud_providers=provider_configs,
             heartbeat_interval=config_data['heartbeat_interval'],
             failure_detection_threshold=config_data['failure_detection_threshold'],
-            replication_factor=config_data['replication_factor']
+            replication_factor=config_data['replication_factor'],
+            # Pass new attributes to SystemConfig
+            data_sources=config_data['data_sources'],
+            chunk_size_mb=config_data['chunk_size_mb'],
+            ingestion_retry_attempts=config_data['ingestion_retry_attempts'],
+            node_id=config_data['node_id'] # Pass new attribute
         )
 
     def log_config_failure(self, failure_type: str, details: str):
