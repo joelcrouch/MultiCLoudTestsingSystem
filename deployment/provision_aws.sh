@@ -5,7 +5,7 @@
 # --- Configuration ---
 REGION="us-east-1"
 INSTANCE_TYPE="t4g.nano"
-KEY_NAME="multicloudKey2_east_1"
+KEY_NAME="multi-cloud-key-3"
 INSTANCE_COUNT=3
 SECURITY_GROUP_NAME="multi-cloud-sg"
 PROJECT_REPO="https://github.com/joelcrouch/MultiCLoudTestsingSystem"
@@ -59,6 +59,8 @@ if [ -z "$SG_ID" ]; then
     echo "WARNING: 0.0.0.0/0 for app port is insecure for production. Will be refined later."
     aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol tcp --port 22 --cidr 0.0.0.0/0 --region "$REGION"
     aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol tcp --port "$APP_PORT" --cidr 0.0.0.0/0 --region "$REGION"
+    echo "Authorizing ingress for ICMP (ping) from anywhere (0.0.0.0/0)."
+    aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol icmp --port -1 --cidr 0.0.0.0/0 --region "$REGION"
 else
     echo "Security group $SECURITY_GROUP_NAME already exists with ID: $SG_ID. Skipping creation and ingress rules."
 fi
