@@ -1,0 +1,25 @@
+cluster_name: "multi-cloud-cluster"
+cloud_providers:
+  aws:
+    name: "aws"
+    region: "us-east-1"
+    instance_type: "t4g.nano"
+    max_nodes: 3
+    api_rate_limit: 100
+    network_timeout_base: 5.0
+  gcp:
+    name: "gcp"
+    region: "us-central1"
+    instance_type: "e2-micro"
+    max_nodes: 3
+    api_rate_limit: 100
+    network_timeout_base: 5.0
+heartbeat_interval: 10.0
+failure_detection_threshold: 3
+replication_factor: 3
+data_sources:
+  - "s3://my-ml-data-bucket/training-data/"
+  - "gs://my-gcp-data-bucket/training-data/"
+chunk_size_mb: 100
+ingestion_retry_attempts: 5
+node_id: "local-dev-node-1"

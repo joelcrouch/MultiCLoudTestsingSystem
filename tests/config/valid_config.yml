@@ -2,6 +2,12 @@ cluster_name: "test_cluster"
 heartbeat_interval: 5.0
 failure_detection_threshold: 3
 replication_factor: 3
+data_sources: # NEW
+  - "test_s3_source"
+  - "test_gcs_source"
+chunk_size_mb: 10 # NEW
+ingestion_retry_attempts: 3 # NEW
+node_id: "test-node-local" # NEW
 cloud_providers:
   aws:
     name: "aws"

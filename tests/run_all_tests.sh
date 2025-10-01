@@ -1,0 +1,49 @@
+#!/bin/bash
+
+GREEN_EXIT_CODE=0
+PYTEST_EXIT_CODE=0
+
+# ANSI color codes
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+# Function to print a colored message in a "box"
+print_box_message() {
+    COLOR=$1
+    MESSAGE=$2
+    LINE_LENGTH=${#MESSAGE}
+    BORDER_LINE=$(printf '─%.0s' $(seq 1 $((LINE_LENGTH + 4)))) # +4 for padding
+
+    echo -e "${COLOR}┌${BORDER_LINE}┐${NC}"
+    echo -e "${COLOR}│  ${MESSAGE}  │${NC}"
+    echo -e "${COLOR}└${BORDER_LINE}┘${NC}"
+}
+
+echo "--- Running unittest-style tests with green ---"
+green tests/auth tests/communication tests/config tests/coordination
+GREEN_EXIT_CODE=$?
+
+if [ "$GREEN_EXIT_CODE" -ne 0 ]; then
+    echo "Green tests failed!"
+fi
+
+echo ""
+echo "--- Running pytest-style tests with pytest ---"
+PYTHONPATH=. pytest tests/pipeline/test_ingestion_engine.py
+PYTEST_EXIT_CODE=$?
+
+if [ "$PYTEST_EXIT_CODE" -ne 0 ]; then
+    echo "Pytest tests failed!"
+fi
+
+echo ""
+echo "--- Overall Test Summary ---"
+
+if [ "$GREEN_EXIT_CODE" -eq 0 ] && [ "$PYTEST_EXIT_CODE" -eq 0 ]; then
+    print_box_message "$GREEN" "✅ All test suites passed successfully!"
+    exit 0
+else
+    print_box_message "$RED" "❌ Some test suites failed. Please review the output above for details."
+    exit 1
+fi
