@@ -20,3 +20,4 @@ ENV/
 # Conda
 .conda
 docs/WIP/
+received_chunks/

@@ -175,7 +175,7 @@ class DataSourceAdapter:
             return await f.read()
     
     async def _list_files_cloud(self) -> List[str]:
-        """List files from actual cloud storage (future Sprint 3)"""
+        """List files from actual cloud storage (futurea Sprint 3)"""
         # This will be implemented in Sprint 3 when testing with real cloud storage
         raise NotImplementedError("Cloud storage access not yet implemented")
     
@@ -282,7 +282,13 @@ class DataIngestionEngine:
                 data=file_data
             )
             return [chunk]
-        
+        aysnc def list_files_cloud(self) -> List[str]:class CloudDetector:
+    """Auto detect cloud provider """
+    @staticmethod
+    def detect_cloud_provider():class CloudDetector:
+    """Auto detect cloud provider """
+    @staticmethod
+    def detect_cloud_provider():
         # Split into multiple chunks
         chunks = []
         num_chunks = (file_size + chunk_size_bytes - 1) // chunk_size_bytes  # Ceiling division
