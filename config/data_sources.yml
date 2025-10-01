@@ -1,0 +1,30 @@
+data_sources:
+  aws: 
+    type: "s3"
+    bucket: "ml-training-data-aws"
+    region: "us-east-1"
+    #for testing :local directory simulatign S3 bucker
+    local_simulation: "./test_data/aws_s3_simulation"
+
+  gcp:
+    type: "gcs"
+    bucket: "ml-training-data-gcp"
+    region: "us-central1"
+    # testing local dir simulating GCS
+    local_simulation: "./test_data/gcp_gcs_simulation"
+
+  azure:
+    type: "blob"
+    container: "ml-training-data-azure"
+    region: "eastus"
+    local_simulation: "./test_data/azure_blob_simulation"
+
+#ingestion settings
+ingestion:
+  chunk_size_mb: 100
+  max_concurrent_chunks: 10
+  retry_attempts: 3
+  retry_delay_seconds: 5
+
+#sprint 2 flag
+use_local_simulation: true
