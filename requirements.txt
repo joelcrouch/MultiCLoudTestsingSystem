@@ -9,3 +9,6 @@ pyyaml
 green
 aiofiles
 pytest-asyncio
+pytest-cov
+coverage
+
