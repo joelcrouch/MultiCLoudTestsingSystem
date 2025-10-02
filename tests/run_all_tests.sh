@@ -30,7 +30,7 @@ fi
 
 echo ""
 echo "--- Running pytest-style tests with pytest ---"
-PYTHONPATH=. pytest tests/pipeline/test_ingestion_engine.py
+PYTHONPATH=. pytest tests/pipeline/test_ingestion_engine.py tests/pipeline/test_processing_workers.py
 PYTEST_EXIT_CODE=$?
 
 if [ "$PYTEST_EXIT_CODE" -ne 0 ]; then

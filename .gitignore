@@ -21,3 +21,5 @@ ENV/
 .conda
 docs/WIP/
 received_chunks/
+.coverage
+
