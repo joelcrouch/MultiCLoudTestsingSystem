@@ -1,0 +1,46 @@
+storage:
+  backends:
+    local:
+      enabled: true
+      base_path: "./storage/data"
+      max_size_gb: 100
+    
+    cloud:
+      enabled: false  # Sprint 3: real cloud storage
+      aws_s3:
+        bucket: "ml-training-storage"
+        region: "us-east-1"
+      gcp_gcs:
+        bucket: "ml-training-storage"
+        region: "us-central1"
+  
+  # Data organization
+  organization:
+    partition_by: "date"  # Options: date, cloud, node, chunk_size
+    create_checkpoints: true
+    checkpoint_interval_chunks: 1000
+  
+  # Data integrity
+  integrity:
+    verify_on_write: true
+    verify_on_read: true
+    checksum_algorithm: "md5"  # Options: md5, sha256
+    store_metadata: true
+  
+  # Cleanup and maintenance
+  cleanup:
+    enable_auto_cleanup: true
+    retention_days: 30
+    cleanup_schedule: "daily"  # When to run cleanup
+    compress_old_data: true
+    compression_age_days: 7
+  
+  # Performance
+  performance:
+    write_buffer_size_mb: 10
+    max_concurrent_writes: 20
+    enable_write_cache: true
+    cache_size_mb: 100
+
+# For Sprint 2: local filesystem storage
+use_local_storage: true
