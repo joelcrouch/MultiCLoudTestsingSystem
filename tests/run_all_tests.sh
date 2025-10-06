@@ -33,7 +33,7 @@ fi
 
 echo ""
 echo "--- Running pytest-style tests with pytest ---"
-time PYTHONPATH=. pytest tests/pipeline/test_ingestion_engine.py tests/pipeline/test_processing_workers.py tests/pipeline/test_distribution_coordinator.py
+time PYTHONPATH=. pytest --cov=src --cov-report=html tests/pipeline/test_ingestion_engine.py tests/pipeline/test_processing_workers.py tests/pipeline/test_distribution_coordinator.py tests/pipeline/test_storage_manager.py
 PYTEST_EXIT_CODE=$?
 
 if [ "$PYTEST_EXIT_CODE" -ne 0 ]; then

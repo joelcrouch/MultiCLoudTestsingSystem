@@ -23,3 +23,5 @@ docs/WIP/
 received_chunks/
 .coverage
 
+# Ignore local storage data
+/storage/
