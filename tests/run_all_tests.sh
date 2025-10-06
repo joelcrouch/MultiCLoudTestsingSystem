@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Record start time
+start_time=$(date +%s)
+
 GREEN_EXIT_CODE=0
 PYTEST_EXIT_CODE=0
 
@@ -21,7 +24,7 @@ print_box_message() {
 }
 
 echo "--- Running unittest-style tests with green ---"
-green tests/auth tests/communication tests/config tests/coordination
+time green tests/auth tests/communication tests/config tests/coordination
 GREEN_EXIT_CODE=$?
 
 if [ "$GREEN_EXIT_CODE" -ne 0 ]; then
@@ -30,7 +33,7 @@ fi
 
 echo ""
 echo "--- Running pytest-style tests with pytest ---"
-PYTHONPATH=. pytest tests/pipeline/test_ingestion_engine.py tests/pipeline/test_processing_workers.py
+time PYTHONPATH=. pytest tests/pipeline/test_ingestion_engine.py tests/pipeline/test_processing_workers.py tests/pipeline/test_distribution_coordinator.py
 PYTEST_EXIT_CODE=$?
 
 if [ "$PYTEST_EXIT_CODE" -ne 0 ]; then
@@ -39,6 +42,13 @@ fi
 
 echo ""
 echo "--- Overall Test Summary ---"
+
+# Record end time and calculate duration
+end_time=$(date +%s)
+duration=$((end_time - start_time))
+echo "Total execution time: ${duration} seconds"
+echo ""
+
 
 if [ "$GREEN_EXIT_CODE" -eq 0 ] && [ "$PYTEST_EXIT_CODE" -eq 0 ]; then
     print_box_message "$GREEN" "✅ All test suites passed successfully!"
