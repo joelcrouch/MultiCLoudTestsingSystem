@@ -1,0 +1,37 @@
+#distribution cooordinator configuration
+
+distribution:
+  #replication settings
+  replication_factor: 3 #  replicas / chunk
+  min_replicas_success: 2 # min. replicas required for go
+
+  #placement strategy
+  placement:
+    strategy: "network_aware"  #options: round_robin, network_aware, load_balanced
+    prefer_same_cloud: true  # better latency
+    cross_cloud_threshold: 0.7 # tunable-if cloud load >70%, distribute to otherclouds
+    #what happens when all clouds are runniing at >70%
+
+    network:
+      #average latency between clouds (ms)
+      aws_to_gcp_latency_ms: 50
+      aws_to_azure_latency_ms: 60
+      gcp_to_azure_latency_ms: 45
+      same_cloud_latency_ms: 5
+
+      #distribution performance
+      max_concurrent_distributions: 15
+      distribution_timeout_seconds: 30
+      verify_after_distribution: true
+
+      #failure handling
+      failure_handling: 
+        max_retries: 3
+        retry_dalay_seconds: 3
+        fallback_to_any_node: true 
+
+      #for s2: sim network transfers
+      simulate_distribution: true
+      simulated_transfer_time_ms: 50
+
+      

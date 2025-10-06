@@ -1,0 +1,34 @@
+# Processing worker configuration
+processing:
+  # Worker pool settings
+  max_workers_per_node: 4
+  worker_timeout_seconds: 300
+  max_concurrent_tasks: 20
+  
+  # Processing functions
+  processing_pipeline:
+    - name: "validate_data"
+      enabled: true
+      timeout_seconds: 30
+    - name: "transform_data"
+      enabled: true
+      timeout_seconds: 60
+    - name: "compress_data"
+      enabled: false  # Optional step
+      timeout_seconds: 45
+  
+  # Load balancing
+  load_balancing:
+    strategy: "least_loaded"  # Options: round_robin, least_loaded, random
+    rebalance_threshold: 0.3  # Rebalance if load difference > 30%
+  
+  # Failure handling
+  failure_handling:
+    max_retries: 3
+    retry_delay_seconds: 5
+    retry_exponential_backoff: true
+    redistribute_on_failure: true
+
+# For Sprint 2: simulated processing
+simulate_processing: true
+simulated_processing_time_ms: 100  # Simulate 100ms per chunk
