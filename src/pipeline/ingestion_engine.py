@@ -73,11 +73,13 @@ class CloudDetector:
 
 class DataSourceAdapter:
     """Abstract adapter for different cloud storage types"""
-    
+
     def __init__(self, cloud_provider: str, config: Dict, use_simulation: bool = True):
         self.cloud_provider = cloud_provider
         self.config = config
         self.use_simulation = use_simulation
+        # Cache the simulation directory path at initialization
+        self.sim_dir = Path(config.get('local_simulation', './test_data'))
         
     async def list_files(self) -> List[str]:
         """List all files in the data source"""
@@ -95,31 +97,28 @@ class DataSourceAdapter:
     
     async def _list_files_local_simulation(self) -> List[str]:
         """List files from local simulation directory"""
-        sim_dir = Path(self.config.get('local_simulation', './test_data'))
-        
-        if not sim_dir.exists():
-            print(f"⚠️  Simulation directory {sim_dir} doesn't exist, creating it...")
-            sim_dir.mkdir(parents=True, exist_ok=True)
+        if not self.sim_dir.exists():
+            print(f"⚠️  Simulation directory {self.sim_dir} doesn't exist, creating it...")
+            self.sim_dir.mkdir(parents=True, exist_ok=True)
             return []
-        
+
         # Find all files recursively
         files = []
-        for file_path in sim_dir.rglob('*'):
+        for file_path in self.sim_dir.rglob('*'):
             if file_path.is_file():
                 # Return relative path from simulation root
-                relative_path = file_path.relative_to(sim_dir)
+                relative_path = file_path.relative_to(self.sim_dir)
                 files.append(str(relative_path))
-        
+
         return files
     
     async def _read_file_local_simulation(self, file_path: str) -> bytes:
         """Read file from local simulation directory"""
-        sim_dir = Path(self.config.get('local_simulation', './test_data'))
-        full_path = sim_dir / file_path
-        
+        full_path = self.sim_dir / file_path
+
         if not full_path.exists():
-            raise FileNotFoundError(f"File {file_path} not found in {sim_dir}")
-        
+            raise FileNotFoundError(f"File {file_path} not found in {self.sim_dir}")
+
         async with aiofiles.open(full_path, 'rb') as f:
             return await f.read()
     
@@ -174,20 +173,39 @@ class DataIngestionEngine:
         print(f"   Chunk size: {self.chunk_size_mb}MB")
         print(f"   Data source: {self.cloud_config.get('local_simulation', 'cloud storage')}")
     
-    async def ingest_batch(self, file_pattern: str = '*') -> List[DataChunk]:
+    async def ingest_batch(self, file_pattern: str = '*', custom_source_path: str = None) -> List[DataChunk]:
         """
         Main ingestion entry point
-        
+
+        Args:
+            file_pattern: Pattern to match files (default '*')
+            custom_source_path: Optional override for data source path (used in testing)
+
         Steps:
         1. List files from cloud-specific data source
         2. Chunk large files into manageable pieces
         3. Distribute chunks to other nodes for processing
         """
         print(f"\n📥 Starting data ingestion from {self.current_cloud}...")
-        
+
+        # If custom source path provided, temporarily override the config
+        if custom_source_path:
+            original_config = self.cloud_config.get('local_simulation')
+            self.cloud_config['local_simulation'] = custom_source_path
+            # Recreate data source adapter with new path
+            self.data_source = DataSourceAdapter(
+                self.current_cloud,
+                self.cloud_config,
+                use_simulation=self.config.get('use_local_simulation', True)
+            )
+
         # Step 1: List available files
         available_files = await self.data_source.list_files()
         print(f"   Found {len(available_files)} files in data source")
+
+        # Restore original config if changed
+        if custom_source_path and original_config:
+            self.cloud_config['local_simulation'] = original_config
         
         if not available_files:
             print(f"   ⚠️  No files found! Check your data source configuration.")
