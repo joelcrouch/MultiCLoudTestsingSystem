@@ -9,6 +9,9 @@ from src.pipeline.ingestion_engine import DataIngestionEngine
 from src.pipeline.processing_workers import ProcessingWorkerPool
 from src.pipeline.distribution_coordinator import DistributionCoordinator
 from src.pipeline.storage_manager import StorageManager
+from src.monitoring.pipeline_monitor import PipelineMonitor
+from src.monitoring.pipeline_logger import PipelineLogger
+from src.monitoring.status_dashboard import StatusDashboard
 
 
 class PipelineStatus(Enum):
@@ -58,7 +61,7 @@ class PipelineOrchestrator:
     Ingestion -> Processing -> Distribution -> Storage
     """
 
-    def __init__(self, node_registry, config_dir='config/'):
+    def __init__(self, node_registry, config_dir='config/', enable_monitoring=True):
         self.node_registry = node_registry
 
         # Initialize all pipeline stages
@@ -73,8 +76,21 @@ class PipelineOrchestrator:
         self.current_stage = None
         self.metrics = PipelineMetrics()
 
+        # Initialize monitoring components
+        self.enable_monitoring = enable_monitoring
+        if self.enable_monitoring:
+            self.monitor = PipelineMonitor()
+            self.logger = PipelineLogger()
+            self.dashboard = StatusDashboard()
+        else:
+            self.monitor = None
+            self.logger = None
+            self.dashboard = None
+
         print(f"🎭 Pipeline Orchestrator initialized")
         print(f"   All 4 stages ready: Ingestion → Processing → Distribution → Storage")
+        if self.enable_monitoring:
+            print(f"   Monitoring: ENABLED (metrics, logging, dashboard)")
 
     async def run_pipeline(self, batch_config: Dict) -> PipelineResult:
         """
@@ -95,8 +111,16 @@ class PipelineOrchestrator:
         print(f"{'='*60}\n")
 
         start_time = time.time()
+        run_id = batch_config.get('batch_id', f'run_{int(time.time())}')
+
         self.pipeline_status = PipelineStatus.RUNNING
         self.current_batch = batch_config
+
+        # Start monitoring
+        if self.enable_monitoring:
+            self.monitor.start_pipeline_run(run_id)
+            self.logger.log_pipeline_start(run_id, batch_config)
+            self.dashboard.display_compact_status(self)
 
         try:
             # Stage 1: Data Ingestion
@@ -104,12 +128,20 @@ class PipelineOrchestrator:
             self.current_stage = "ingestion"
             stage_start = time.time()
 
+            if self.enable_monitoring:
+                self.logger.log_stage_start('ingestion')
+
             ingested_chunks = await self.ingestion_engine.ingest_batch(
                 custom_source_path=batch_config['data_source']
             )
 
             stage_duration = time.time() - stage_start
             self.metrics.record_stage('ingestion', len(ingested_chunks), stage_duration)
+
+            if self.enable_monitoring:
+                self.monitor.track_stage_performance('ingestion', stage_duration, len(ingested_chunks))
+                self.logger.log_stage_complete('ingestion', stage_duration, len(ingested_chunks), 1.0)
+
             print(f"✅ Ingestion complete: {len(ingested_chunks)} chunks in {stage_duration:.2f}s")
 
             # Stage 2: Processing
@@ -117,12 +149,20 @@ class PipelineOrchestrator:
             self.current_stage = "processing"
             stage_start = time.time()
 
+            if self.enable_monitoring:
+                self.logger.log_stage_start('processing')
+
             processed_chunks = await self.processing_pool.process_chunks(
                 ingested_chunks
             )
 
             stage_duration = time.time() - stage_start
             self.metrics.record_stage('processing', len(processed_chunks), stage_duration)
+
+            if self.enable_monitoring:
+                self.monitor.track_stage_performance('processing', stage_duration, len(processed_chunks))
+                self.logger.log_stage_complete('processing', stage_duration, len(processed_chunks), 1.0)
+
             print(f"✅ Processing complete: {len(processed_chunks)} chunks in {stage_duration:.2f}s")
 
             # Stage 3: Distribution
@@ -130,12 +170,20 @@ class PipelineOrchestrator:
             self.current_stage = "distribution"
             stage_start = time.time()
 
+            if self.enable_monitoring:
+                self.logger.log_stage_start('distribution')
+
             distributed_chunks = await self.distribution_coordinator.distribute_processed_chunks(
                 processed_chunks
             )
 
             stage_duration = time.time() - stage_start
             self.metrics.record_stage('distribution', len(distributed_chunks), stage_duration)
+
+            if self.enable_monitoring:
+                self.monitor.track_stage_performance('distribution', stage_duration, len(distributed_chunks))
+                self.logger.log_stage_complete('distribution', stage_duration, len(distributed_chunks), 1.0)
+
             print(f"✅ Distribution complete: {len(distributed_chunks)} chunks in {stage_duration:.2f}s")
 
             # Stage 4: Storage
@@ -143,17 +191,33 @@ class PipelineOrchestrator:
             self.current_stage = "storage"
             stage_start = time.time()
 
+            if self.enable_monitoring:
+                self.logger.log_stage_start('storage')
+
             stored_chunks = await self.storage_manager.store_distributed_chunks(
                 distributed_chunks
             )
 
             stage_duration = time.time() - stage_start
             self.metrics.record_stage('storage', len(stored_chunks), stage_duration)
+
+            if self.enable_monitoring:
+                self.monitor.track_stage_performance('storage', stage_duration, len(stored_chunks))
+                self.logger.log_stage_complete('storage', stage_duration, len(stored_chunks), 1.0)
+
             print(f"✅ Storage complete: {len(stored_chunks)} replicas in {stage_duration:.2f}s")
 
             # Calculate final metrics
             duration = time.time() - start_time
             self.pipeline_status = PipelineStatus.COMPLETED
+
+            # Complete monitoring
+            if self.enable_monitoring:
+                self.monitor.complete_pipeline_run('success', duration)
+                self.logger.log_pipeline_complete(run_id, 'success', duration, len(ingested_chunks))
+
+                # Generate and display performance report
+                print("\n" + self.monitor.generate_performance_report())
 
             print(f"\n{'='*60}")
             print(f"Pipeline Execution Complete")
@@ -171,6 +235,16 @@ class PipelineOrchestrator:
         except Exception as e:
             self.pipeline_status = PipelineStatus.FAILED
             duration = time.time() - start_time
+
+            # Log failure
+            if self.enable_monitoring:
+                self.monitor.complete_pipeline_run('failed', duration)
+                self.logger.log_pipeline_complete(run_id, 'failed', duration, 0)
+                self.logger.log_error_event(
+                    error_type=type(e).__name__,
+                    error_message=str(e),
+                    context={'stage': self.current_stage}
+                )
 
             print(f"\n{'='*60}")
             print(f"❌ Pipeline Failed")
