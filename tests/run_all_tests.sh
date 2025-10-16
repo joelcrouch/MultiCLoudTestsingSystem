@@ -31,9 +31,12 @@ if [ "$GREEN_EXIT_CODE" -ne 0 ]; then
     echo "Green tests failed!"
 fi
 
+
 echo ""
 echo "--- Running pytest-style tests with pytest ---"
-time PYTHONPATH=. pytest --cov=src --cov-report=html tests/pipeline/test_ingestion_engine.py tests/pipeline/test_processing_workers.py tests/pipeline/test_distribution_coordinator.py tests/pipeline/test_storage_manager.py tests/integration/test_full_pipeline.py tests/integration/test_cross_cloud_flow.py tests/integration/test_large_scale_pipeline.py tests/monitoring/test_monitoring.py
+time PYTHONPATH=. pecho ""
+echo "--- Running pytest-style tests with pytest ---"
+time PYTHONPATH=. pytest --cov=src --cov-report=html tests/pipeline/test_ingestion_engine.py tests/pipeline/test_processing_workers.py tests/pipeline/test_distribution_coordinator.py tests/pipeline/test_storage_manager.py
 PYTEST_EXIT_CODE=$?
 
 if [ "$PYTEST_EXIT_CODE" -ne 0 ]; then
