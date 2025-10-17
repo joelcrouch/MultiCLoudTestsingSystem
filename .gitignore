@@ -25,3 +25,5 @@ received_chunks/
 
 # Ignore local storage data
 /storage/
+
+docs/dailyLogs/
