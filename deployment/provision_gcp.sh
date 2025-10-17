@@ -65,7 +65,7 @@ for i in $(seq 1 $INSTANCE_COUNT); do
         --metadata-from-file=startup-script=<(echo "$STARTUP_SCRIPT") \
         --tags="multi-cloud-node" \
         --labels="project=multi-cloud-distsys" \
-        --preemptible # Use preemptible VMs for cost savings
+        
 done
 
 echo "GCP provisioning script finished. Instances are launching."

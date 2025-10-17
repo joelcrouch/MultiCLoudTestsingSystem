@@ -14,6 +14,13 @@ cloud_providers:
     max_nodes: 3
     api_rate_limit: 100
     network_timeout_base: 5.0
+  azure:
+    name: "azure"
+    region: "eastus"
+    instance_type: "Standard_B1s"
+    max_nodes: 3
+    api_rate_limit: 100
+    network_timeout_base: 5.0
 heartbeat_interval: 10.0
 failure_detection_threshold: 3
 replication_factor: 3
