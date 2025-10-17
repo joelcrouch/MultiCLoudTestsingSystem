@@ -4,9 +4,9 @@
 
 # --- Configuration ---
 RESOURCE_GROUP_NAME="MultiCloudRG"
-LOCATION="eastus"                      # Azure Region (e.g., eastus, westus3)
-VM_SIZE="Standard_B1s"                 # Azure VM Size (low-cost burstable size)
-VM_COUNT=3
+LOCATION="centralus"                      # Azure Region (e.g., eastus, westus3)
+VM_SIZE="Standard_B2s"                 # Azure VM Size (low-cost burstable size)
+VM_COUNT=2
 USERNAME="azureuser"                   # VM login username
 SSH_KEY_PATH="~/.ssh/id_rsa.pub"       # Path to your existing SSH public key
 PROJECT_REPO="https://github.com/joelcrouch/MultiCLoudTestsingSystem"
@@ -23,6 +23,9 @@ read -r -d '' CUSTOM_DATA <<EOF
 echo "Starting custom data script..."
 apt-get update -y
 apt-get install -y git python3-pip
+
+# Allow ICMP (ping) traffic through the OS firewall
+iptables -A INPUT -p icmp -j ACCEPT
 
 # Clone the repository
 echo "Cloning repository: $PROJECT_REPO"
@@ -45,7 +48,10 @@ az group create --name "$RESOURCE_GROUP_NAME" --location "$LOCATION" --output no
 
 # 2. Create Network Security Group (NSG) and Rules
 echo "Creating Network Security Group: $NSG_NAME"
-az network nsg create --resource-group "$RESOURCE_GROUP_NAME" --name "$NSG_NAME" --location "$LOCATION" --output none
+az network nsg create --resource-group "$RESOURCE_GROUP_NAME" --name "$NSG_NAME" --location "$LOCATION"
+
+echo "Waiting 10 seconds for NSG to propagate..."
+sleep 10
 
 echo "Authorizing ingress for SSH (port 22) and App (port $APP_PORT)."
 echo "WARNING: Opening to * is insecure for production. Will be refined later."
@@ -97,13 +103,26 @@ az network vnet create \
     --name "$VNET_NAME" \
     --location "$LOCATION" \
     --subnet-name "$SUBNET_NAME" \
-    --nsg "$NSG_NAME" \
     --output none
 
-# 4. Launch Instances (Loop for multiple VMs)
+# 4. Create Public IP addresses explicitly
+echo "Creating Public IP addresses..."
+for i in $(seq 1 $VM_COUNT); do
+    PUBLIC_IP_NAME="MultiCloudNode-Azure-${i}PublicIP"
+    echo "Creating Public IP: $PUBLIC_IP_NAME"
+    az network public-ip create \
+        --resource-group "$RESOURCE_GROUP_NAME" \
+        --name "$PUBLIC_IP_NAME" \
+        --sku Standard \
+        --location "$LOCATION" \
+        --output none
+done
+
+# 5. Launch Instances (Loop for multiple VMs)
 echo "Launching $VM_COUNT instances of size $VM_SIZE..."
 for i in $(seq 1 $VM_COUNT); do
     VM_NAME="MultiCloudNode-Azure-$i"
+    PUBLIC_IP_NAME="${VM_NAME}PublicIP"
     
     echo "Creating VM: $VM_NAME"
     az vm create \
@@ -115,7 +134,7 @@ for i in $(seq 1 $VM_COUNT); do
         --vnet-name "$VNET_NAME" \
         --subnet "$SUBNET_NAME" \
         --nsg "$NSG_NAME" \
-        --public-ip-sku Standard \
+        --public-ip-address "$PUBLIC_IP_NAME" \
         --admin-username "$USERNAME" \
         --ssh-key-values "$SSH_KEY_PATH" \
         --custom-data "$CUSTOM_DATA" \
